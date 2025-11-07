@@ -1,6 +1,11 @@
 <template>
   <div class="dropdown-wrapper">
-    <button type="button" class="btn btn_dropdown" :disabled="disabled" @click="toggleDropdown">
+    <button
+      type="button"
+      class="btn btn_dropdown"
+      :disabled="disabled"
+      @click="toggleDropdown"
+    >
       {{ text }}
     </button>
 
@@ -11,13 +16,27 @@
       </span>
     </div>
 
-    <div v-if="isOpen" class="dropdown-menu dark:bg-gray-900 dark:text-gray-100" @scroll="scroll">
-      <input v-if="searchable" type="search" class="form-control mb-1" placeholder="Qidiruv..." v-model="search"
-        @input="onSearch" />
+    <div
+      v-if="isOpen"
+      class="dropdown-menu dark:bg-gray-900 dark:text-gray-100"
+      @scroll="scroll"
+    >
+      <input
+        v-if="searchable"
+        type="search"
+        class="form-control mb-1"
+        placeholder="Qidiruv..."
+        v-model="search"
+        @input="onSearch"
+      />
       <ul class="list dark:bg-gray-900 dark:text-gray-100">
         <li v-if="all" @click="update(null)">Barchasi</li>
-        <li v-for="item in data || list" :key="item.id || item" @click="update(item)"
-          :class="{ selected: selected(item) }">
+        <li
+          v-for="item in data || list"
+          :key="item.id || item"
+          @click="update(item)"
+          :class="{ selected: selected(item) }"
+        >
           {{ formatName(item) }}
         </li>
       </ul>
@@ -62,24 +81,8 @@ export default {
           return "get_main_users";
         case "customer":
           return "get_customers";
-        case "manba":
-          return "get_manba";
-        case "xizmat":
-          return "get_xizmat";
-        case "region":
-          return "get_regions";
-        case "country":
-          return "get_countries";
-        case "tokcha":
-          return "get_places";
         case "kassa":
           return "get_kassa";
-        case "raw_material":
-          return "get_raw_materials";
-        case "expense_type":
-          return "get_expense_types";
-        case "language":
-          return "get_languages";
         default:
           return null;
       }
@@ -94,29 +97,10 @@ export default {
         page: this.current_page,
         status: param.status || null,
         limit: 20,
-        for_order_done: param.for_order_done || null,
-        to_step: param.to_step || 0,
-        from_step: param.from_step || 0,
-        section_id: param.section_id || 0,
-        country_id: param.country_id || 0,
-        branch_id: param.branch_id || 0,
       };
     },
     searchable() {
-      return [
-        "customer",
-        "product_type",
-        "cell",
-        "product",
-        "region",
-        "raw_material",
-        "market",
-        "service",
-        "category",
-        "expense",
-        "user",
-        "raw_mt",
-      ].includes(this.type);
+      return ["customer", "product", "category", "user"].includes(this.type);
     },
     title() {
       switch (this.type) {
@@ -124,26 +108,10 @@ export default {
           return "Hodimlar";
         case "customer":
           return "Mijozlar";
-        case "manba":
-          return "Manba";
-        case "xizmat":
-          return "Xizmatlar";
-        case "region":
-          return "Hududlar";
-        case "country":
-          return "Davlat";
         case "main_user":
           return "Hodimlar";
-        case "tokcha":
-          return "Tokchalar";
         case "kassa":
           return "Kassalar";
-        case "raw_material":
-          return "Homashyo";
-        case "expense_type":
-          return "Chiqim turlari";
-        case "language":
-          return "Tillar"
         default:
           return "Tanlang";
       }
@@ -207,7 +175,6 @@ export default {
       }
       this.$emit("update:modelValue", value);
       this.$emit("change", value);
-
     },
     selected(data) {
       const array = this.modelValue;
