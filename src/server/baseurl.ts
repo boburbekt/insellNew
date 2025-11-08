@@ -1,0 +1,1 @@
+export default "https://sinov.api-insell.uz/";

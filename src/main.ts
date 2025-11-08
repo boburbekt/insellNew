@@ -1,6 +1,6 @@
 import { createApp } from 'vue';
 import App from './App.vue';
-import "@/assets/scss/main.scss"
+import "@/assets/style/main.css"
 import Input from './components/Input/Input.vue';
 import CurrencyInput from '@/components/Input/CurrencyInput.vue';
 import SearchInput from '@/components/Input/SearchInput.vue';
@@ -20,12 +20,16 @@ import baseurl from '@/server/baseurl';
 import router from '@/router';
 import VueTheMask from 'vue-the-mask';
 import util from '@/server/util';
+import pinia from '@/pinia';
+import store from '@/store';
+
+
 // import store from '@/store';
 import i18n from '@/i18n'
 import { useTheme } from './composables/useTheme'
 
 const app = createApp(App);
-// app.provide('$store', store);
+app.provide('$store', store);
 app.provide('$baseurl', baseurl);
 app.provide('$util', util);
 useTheme()
@@ -48,6 +52,7 @@ app
     .component('CurrencyInput', CurrencyInput)
     .use(router)
     .use(VueTheMask)
-    // .use(store)
+    .use(pinia)
+    .use(store)
     .use(i18n)
     .mount('#app')
