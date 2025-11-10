@@ -1,6 +1,5 @@
 import query from "@/server/query";
 import server from "@/server/server";
-import { PaginationData, manbaType } from '@types';
 import { getFilialUsers } from "./users.request";
 import { customers, get_countries, get_main_users, get_manba, get_regions, xizmatlar, get_places, get_expense_types, get_kassa, get_raw_materials, get_languages } from '@/server/module';
 export default {

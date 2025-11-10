@@ -46,7 +46,4 @@ export default {
     refresh_token(data: rfData) {
         return server("refresh_token", "post", data);
     },
-    me() {
-        return server("me", "get",);
-    },
 };
