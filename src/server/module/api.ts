@@ -1,7 +1,7 @@
 import query from "@/server/query";
 import server from "@/server/server";
 import { getFilialUsers } from "./users.request";
-import { customers, get_countries, get_main_users, get_manba, get_regions, xizmatlar, get_places, get_expense_types, get_kassa, get_raw_materials, get_languages } from '@/server/module';
+import { customers,  get_main_users, get_manba, get_regions, xizmatlar, get_places, get_expense_types, get_kassa, get_raw_materials, get_languages } from '@/server/module';
 export default {
     async get_manba(p: any) {
 
@@ -27,9 +27,6 @@ export default {
     },
     async get_regions(p: any) {
         return await get_regions(p)
-    },
-    async get_countries(p: any) {
-        return await get_countries(p)
     },
     async get_main_users(p: any) {
         return await get_main_users(p)

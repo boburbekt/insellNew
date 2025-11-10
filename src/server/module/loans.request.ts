@@ -1,4 +1,4 @@
-import { LoanRequest } from "@types";
+import type { LoanRequest } from "@types";
 import server from "../server";
 export const loans_for_group = (source: string) => {
     return server(`loans_for_group?source=${source}`, 'get')

@@ -1,5 +1,4 @@
-import { userForm, editRes, userData } from '@types';
-import util from "@/server/util";
+import type { userForm, editRes, userData } from '@types';
 import server from "@/server/server";
 
 export const user_add = (data: userForm) => {

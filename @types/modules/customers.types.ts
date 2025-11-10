@@ -1,6 +1,3 @@
-import { RouteParamValueRaw } from "vue-router";
-import { locationType } from "../global";
-
 export interface CustomerParams {
   id: number;
   title: string;
@@ -117,7 +114,6 @@ export interface CustomerPost {
   customer: CustomerData,
   recall: CustomerRecall,
   order: CustomerOrder,
-  location: locationType,
   products: CustomerProduct[]
 }
 export interface CustomerTypes {

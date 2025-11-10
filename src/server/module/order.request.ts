@@ -1,6 +1,4 @@
-
 import server from "@/server/server";
-import { orders } from "@types";
 export const get_orders = (p: any) => {
     const queryParams = [
         `page=${p.page || 0}`,

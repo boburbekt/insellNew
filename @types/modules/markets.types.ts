@@ -1,5 +1,4 @@
-import { RouteParamValueRaw } from "vue-router";
-import { locationType } from "../global";
+
 
 export interface MarketData {
   id: number,

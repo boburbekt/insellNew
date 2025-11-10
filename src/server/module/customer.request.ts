@@ -1,4 +1,4 @@
-import { CustomerData, CustomerTypes } from '@types';
+
 import util from "@/server/util";
 import query from "@/server/query";
 import server from "@/server/server";

@@ -1,4 +1,4 @@
-import { CustomerData } from './customers.types';
+
 export interface cleansData {
     order_id: number,
     nomer: number,
@@ -9,7 +9,6 @@ export interface cleansData {
     order_date: string,
     topshir_sana: string,
     order_status: string,
-    customer: CustomerData
 }
 export interface cleanXizmatData {
     gilam_eni: number,

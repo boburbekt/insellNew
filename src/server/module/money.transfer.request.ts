@@ -1,4 +1,3 @@
-import { TransferConfirum, TransferRequest } from "@types";
 import server from "../server";
 export const get_transfers = async (p: any) => {
     const queryParams = [
@@ -14,10 +13,10 @@ export const get_transfers = async (p: any) => {
     ].filter(Boolean).join('&');
     return await server(`get_transfers?${queryParams}`,);
 }
-export const confirm_transfer = async (data: TransferConfirum) => {
+export const confirm_transfer = async (data: any) => {
     return await server(`confirm_transfer`, 'put', data);
 }
-export const create_transfer = async (data: TransferRequest) => {
+export const create_transfer = async (data: any) => {
     return await server(`create_transfer`, 'post', data);
 }
 export const delete_transfer = async (id: number) => {

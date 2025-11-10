@@ -1,5 +1,4 @@
-import { locationType } from "@types"
-import { CustomerData } from "./customers.types"
+
 
 export interface orders {
     cursor?: string | number,
@@ -46,16 +45,6 @@ export interface orderCustomer {
 }
 
 // Order Info Types
-export interface orderInfoTypes {
-    order_id: number,
-    nomer: number,
-    izoh: string,
-    izoh2: string,
-    order_status: string,
-    order_date: string,
-    customer: CustomerData,
-    buyurtmalar: orderType[]
-}
 export interface orderType {
     id: number,
     x_id: number,
@@ -80,7 +69,6 @@ export interface orderCreate {
     comment: string,
     finish_date: string,
     driver_id: number | null,
-    customer: CustomerData,
     recall: Recall,
     service: OrderProduct[],
     customer_olib_ketish: boolean,

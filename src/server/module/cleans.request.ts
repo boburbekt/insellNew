@@ -1,7 +1,4 @@
-import util from "@/server/util";
-import query from "@/server/query";
 import server from "@/server/server";
-import { cleansData, orderCleanPost, xizmatType } from "@types";
 
 
 export const get_cleans = (p: any) => {
