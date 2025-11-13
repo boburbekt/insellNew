@@ -1,7 +1,6 @@
 import query from "@/server/query";
 import server from "@/server/server";
-import { getFilialUsers } from "./users.request";
-import { customers,  get_main_users, get_manba, get_regions, xizmatlar, get_places, get_expense_types, get_kassa, get_raw_materials, get_languages } from '@/server/module';
+import { customers,  get_manba, get_regions, xizmatlar, get_places, get_expense_types, get_kassa, get_raw_materials, get_languages } from '@/server/module';
 export default {
     async get_manba(p: any) {
 
@@ -16,9 +15,6 @@ export default {
         ].filter(Boolean).join('&');
         return server(`v1/bot-location?${queryParams}`, 'get')
     },
-    async get_users(param: any) {
-        return await getFilialUsers(param);
-    },
     async get_customers(param: any) {
         return await customers(param);
     },
@@ -27,9 +23,6 @@ export default {
     },
     async get_regions(p: any) {
         return await get_regions(p)
-    },
-    async get_main_users(p: any) {
-        return await get_main_users(p)
     },
     async get_expense_types(p: any) {
         return await get_expense_types(p)
