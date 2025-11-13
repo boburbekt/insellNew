@@ -5,7 +5,8 @@
     "src/**/*",
     "src/**/*.vue",
     "src/types/**/*.d.ts",
-    "@types/**/*.ts"
+    "@types/**/*.ts",
+    "@types/**/*.d.ts"
   ],
   "exclude": [
     "src/**/__tests__/*"
@@ -15,20 +16,15 @@
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@types/*": [
-        "@types"
-      ]
+      "@/*": ["./src/*"],
+      "@types": ["./@types/index"],
+      "@types/*": ["./@types/*"]
     },
-    "types": [
-      "vite/client"
-    ],
+    "types": ["vite/client"],
     "skipLibCheck": true,
     "allowJs": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true,
+    "esModuleInterop": true
   }
 }

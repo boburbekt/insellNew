@@ -7,17 +7,33 @@ export interface users {
 }
 
 export interface userForm {
-    id?: number;
-    name: string;
-    phone: string;
-    phone_2?: string;
-    username: string;
-    password: string;
-    role?: string;
-    user_image?: File | null;
-    created_at?: Date | string;
-    salary: number;
-    permission_customer_olib_kelish_ketish_status?: boolean;
+    id: number,
+    name: string,
+    username: string,
+    password: string,
+    role: string,
+    phone: number | string,
+    branch_id: number,
+    status: true,
+    kelish_vaqti: string,
+    ketish_vaqti: string,
+    maosh: number,
+    telegram_id: number
+
+}
+
+export interface adminCreate {
+    name: string,
+    username: string | number,
+    password: string,
+    phone: number | string,
+}
+
+export interface jarimaBonusAdd {
+    money: number,
+    comment: string,
+    worker_id: number | string,
+    type: string
 }
 
 export interface data {

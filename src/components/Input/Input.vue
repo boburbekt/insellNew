@@ -98,7 +98,9 @@ export default {
     </div>
     <div
       class="input input-bordered flex items-center border-1 w-full gap-2 focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 dark:text-gray-100"
-      :class="errorState ? 'input-error' : 'border-primary dark:border-gray-500'"
+      :class="
+        errorState ? 'input-error' : 'border-primary dark:border-gray-500'
+      "
     >
       <span
         v-if="icon && iconPosition === 'start' && !mask"

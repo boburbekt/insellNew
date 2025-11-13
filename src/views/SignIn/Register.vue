@@ -1,392 +1,418 @@
-<script>
-import api from "../../server/api";
+<script setup lang="ts">
+import { ref, computed, onMounted, nextTick } from "vue";
+import { useStore } from "vuex";
+import { useRouter } from "vue-router";
+import { confirm_user, create_admin, retry_sms } from "../../server/module/users.request";
+import tokenapi from "../../server/tokenapi";
+import type { adminCreate } from "../../../@types/modules/users.types"; 
 
-export default {
-  name: "Register",
-  data() {
-    return {
-      data: {
-        name: "",
-        password: "",
-        phone: "",
-      },
-      passwords: {
-        password1: "",
-        password2: "",
-      },
-      type: true,
-      type2: true,
-      otpValue: ["", "", "", ""],
-      sms_tab: false,
-      rety_sms: false,
-      seconds: 120,
-    };
-  },
-  computed: {
-    user() {
-      return this.$store.getters.user;
-    },
-    displayTime() {
-      let minutes = Math.floor(this.seconds / 60);
-      let remainingSeconds = this.seconds % 60;
-      return `${minutes}:${remainingSeconds < 10 ? "0" : ""
-        }${remainingSeconds}`;
-    },
-  },
-  created() {
-    this.$store.dispatch("setUser", null);
-  },
-  methods: {
-    post() {
-      this.data.phone = this.data.phone.replace(/[- )(]/g, "");
-      if (this.passwords.password1 == this.passwords.password2) {
-        this.data.password = this.passwords.password1;
-        this.data.username = this.data.phone
-        api
-          .create_admin(this.data)
-          .then((res) => {
-            this.$store.dispatch("setUser", res.data);
-            this.sms_tab = true;
-            this.startTimer();
-          })
-          .catch((err) => {
-            if (err.response.status == 401) {
-              this.$util.toastError(
-                "error",
-                "Telefon raqam yoki parolda xatolik"
-              );
-            }
-            if (err.response.status == 500) {
-              this.$util.toastError("error", "Serverda xatolik!");
-            }
-          });
-      } else {
-        this.$util.toastError("error", "Paro'lda hatolik ");
-      }
-    },
-    smsPost() {
-      let sms = "";
-      let phone = this.data.phone.replace(/[- )(]/g, "");
-      this.otpValue.forEach((e) => {
-        sms += e;
-      });
+interface Passwords {
+  password1: string;
+  password2: string;
+}
 
-      api
-        .confirm_user({ phone: phone, code: sms })
-        .then((res) => {
-          this.postLogin()
+const store = useStore();
+const router = useRouter();
+const data = ref<adminCreate>({
+  name: "",
+  username: "",
+  password: "",
+  phone: "",
+});
+const passwords = ref<Passwords>({
+  password1: "",
+  password2: "",
+});
+const type = ref(true);
+const type2 = ref(true);
+const otpValue = ref<string[]>(["", "", "", ""]);
+const sms_tab = ref(false);
+const rety_sms = ref(false);
+const seconds = ref(120);
+const inputs = ref<(HTMLInputElement | null)[]>([]);
+let intervalId: number | null = null;
+const user = computed(() => store.getters.user);
 
-          // this.$router.push("/sign-in");
-        })
-        .catch(() => { });
-    },
-    retry_sms() {
-      api
-        .retry_sms({ phone: this.data.phone.replace(/[- )(]/g, "") })
-        .then((res) => { });
-    },
-    formatPhoneNumber(value) {
-      if (!value) return value;
-      const phoneNumber = value.replace(/[^\d]/g, "");
-      const phoneNumberLength = phoneNumber.length;
-      if (phoneNumberLength < 2) return phoneNumber;
-      if (phoneNumberLength < 7) {
-        return `(${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(2)}`;
-      }
-      return `(${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(
-        2,
-        5
-      )}-${phoneNumber.slice(5, 7)}-${phoneNumber.slice(7, 9)}`;
-    },
-    phoneNumberFormatter() {
-      const inputField = document.getElementById("phone-number");
-      const formattedInputValue = this.formatPhoneNumber(inputField.value);
-      inputField.value = formattedInputValue;
-    },
-    moveToNextInput(index) {
-      // if (
-      //   index < this.otpValue.length - 1 &&
-      //   this.otpValue[index].length > 0 &&
-      //   this.$refs.inputs &&
-      //   this.$refs.inputs[index + 1]
-      // ) {
-      //   this.$refs.inputs[index + 1].focus();
-      // }
-      const refs = this.$refs.inputs;
-      const next = Array.isArray(refs) ? refs[index + 1] : refs;
-      if (!next) return;
-      this.$nextTick(() => {
-        const dom = next.$el ? next.$el.querySelector('input') : next;
-        if (dom && typeof dom.focus === 'function') dom.focus();
-      });
-    },
-    moveToPreviousInput(index) {
-      if (
-        index > 0 &&
-        this.otpValue[index].length === 0 &&
-        this.$refs.inputs &&
-        this.$refs.inputs[index - 1]
-      ) {
-        this.$refs.inputs[index - 1].focus();
-      }
-    },
-    startTimer() {
-      this.intervalId = setInterval(() => {
-        if (this.seconds <= 0) {
-          clearInterval(this.intervalId);
-          this.rety_sms = true;
-        } else {
-          this.seconds--;
-        }
-      }, 1000);
-    },
-    postLogin() {
-      let data = {
-        username: this.data.phone.replace(/[- )(]/g, ""),
-        password: this.data.password,
-      };
+const displayTime = computed(() => {
+  const minutes = Math.floor(seconds.value / 60);
+  const remainingSeconds = seconds.value % 60;
+  return `${minutes}:${remainingSeconds < 10 ? "0" : ""}${remainingSeconds}`;
+});
 
-      api
-        .token(data)
-        .then((res) => {
-          this.$store.dispatch("setUser", res.data);
-          if (
-            this.$store.getters.user?.role == "admin" ||
-            this.$store.getters.user?.role == "crud_admin"
-          ) this.$router.push("/branches");
-        })
-        .catch((err) => {
-          if (err.response.status == 401) {
-            this.$util.toastError(
-              "error",
-              "Telefon raqam yoki parolda xatolik"
-            );
-          }
-        });
-    },
-  },
+// Methods
+const formatPhoneNumber = (value: string): string => {
+  if (!value) return value;
+  const phoneNumber = value.replace(/[^\d]/g, "");
+  const phoneNumberLength = phoneNumber.length;
+  if (phoneNumberLength < 2) return phoneNumber;
+  if (phoneNumberLength < 7) {
+    return `(${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(2)}`;
+  }
+  return `(${phoneNumber.slice(0, 2)}) ${phoneNumber.slice(
+    2,
+    5
+  )}-${phoneNumber.slice(5, 7)}-${phoneNumber.slice(7, 9)}`;
 };
+
+const phoneNumberFormatter = () => {
+  const inputField = document.getElementById(
+    "phone-number"
+  ) as HTMLInputElement;
+  if (inputField) {
+    const formattedInputValue = formatPhoneNumber(inputField.value);
+    inputField.value = formattedInputValue;
+  }
+};
+
+const startTimer = () => {
+  intervalId = window.setInterval(() => {
+    if (seconds.value <= 0) {
+      if (intervalId) clearInterval(intervalId);
+      rety_sms.value = true;
+    } else {
+      seconds.value--;
+    }
+  }, 1000);
+};
+
+const post = async () => {
+  data.value.phone = (data.value.phone + "").replace(/[- )(]/g, "");
+
+  if (passwords.value.password1 !== passwords.value.password2) {
+    // Toast error - parolda xatolik
+    console.error("Parolda xatolik");
+    return;
+  }
+
+  data.value.password = passwords.value.password1;
+  data.value.username = data.value.phone;
+
+  try {
+    const res = await create_admin(data.value);
+    store.dispatch("setUser", res.data);
+    sms_tab.value = true;
+    startTimer();
+  } catch (err: any) {
+    if (err.response?.status === 401) {
+      console.error("Telefon raqam yoki parolda xatolik");
+    }
+    if (err.response?.status === 500) {
+      console.error("Serverda xatolik!");
+    }
+  }
+};
+
+const smsPost = async () => {
+  let sms = "";
+  const phone = (data.value.phone + "").replace(/[- )(]/g, "");
+  otpValue.value.forEach((e) => {
+    sms += e;
+  });
+
+  try {
+    await confirm_user({ phone, code: sms });
+    postLogin();
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const retrySms = async () => {
+  try {
+    await retry_sms({ phone: (data.value.phone + "").replace(/[- )(]/g, "") });
+    seconds.value = 120;
+    rety_sms.value = false;
+    startTimer();
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+const postLogin = async () => {
+  const loginData = {
+    username: (data.value.phone + "").replace(/[- )(]/g, ""),
+    password: data.value.password,
+  };
+
+  try {
+    const res = await tokenapi.token(loginData);
+    store.dispatch("setUser", res.data);
+    if (
+      store.getters.user?.role === "admin" ||
+      store.getters.user?.role === "crud_admin"
+    ) {
+      router.push("/branches");
+    }
+  } catch (err: any) {
+    if (err.response?.status === 401) {
+      console.error("Telefon raqam yoki parolda xatolik");
+    }
+  }
+};
+
+const moveToNextInput = (index: number) => {
+  if (
+    index < otpValue.value.length - 1 &&
+    otpValue.value[index] !== undefined &&
+    otpValue.value[index].length > 0 &&
+    inputs.value &&
+    Array.isArray(inputs.value)
+  ) {
+    nextTick(() => {
+      const nextInput = inputs.value[index + 1];
+      if (nextInput) {
+        nextInput.focus();
+      }
+    });
+  }
+};
+
+const moveToPreviousInput = (index: number) => {
+  if (
+    index > 0 &&
+    otpValue.value[index] !== undefined &&
+    otpValue.value[index].length === 0 &&
+    inputs.value &&
+    Array.isArray(inputs.value)
+  ) {
+    const prevInput = inputs.value[index - 1];
+    if (prevInput) {
+      prevInput.focus();
+    }
+  }
+};
+// Lifecycle
+onMounted(() => {
+  store.dispatch("setUser", null);
+});
 </script>
 
 <template>
-  <main v-if="!sms_tab">
-    <div class="sign-in-card">
-      <form @submit.prevent="post()">
-        <div class="row gap-2">
-          <div class="col-12">
-            <img src="../../assets/images/logo.png" alt="insell-logo" />
+  <main
+    v-if="!sms_tab"
+    class="flex items-center justify-center min-h-screen bg-cover bg-right"
+  >
+    <div
+      class="w-full max-w-md p-8 bg-white rounded-2xl shadow-lg border border-gray-200"
+    >
+      <form @submit.prevent="post()" class="space-y-4">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+          <img
+            src="../../assets/images/logo.png"
+            alt="insell-logo"
+            class="w-32 mx-auto mb-6"
+          />
+        </div>
+
+        <!-- Title -->
+        <div class="text-center mb-6">
+          <h2 class="text-2xl font-bold text-gray-900 mb-2">
+            Ro'yxatdan o'tish
+          </h2>
+          <p class="text-sm text-gray-600 font-medium">
+            Iltimos ro'yxatdan o'tish uchun ma'lumotlarni kiriting
+          </p>
+        </div>
+
+        <!-- Name Input -->
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-900 mb-1"
+            >Ism</label
+          >
+          <input
+            type="text"
+            id="name"
+            v-model="data.name"
+            placeholder="Ismingizni kiriting"
+            required
+            autocomplete="off"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <!-- Phone Input -->
+        <div>
+          <label
+            for="phone-number"
+            class="block text-sm font-medium text-gray-900 mb-1"
+          >
+            Telefon raqam
+          </label>
+          <div class="flex">
+            <span
+              class="inline-flex items-center px-3 text-sm text-gray-900 bg-gray-100 border border-r-0 border-gray-300 rounded-l-lg"
+            >
+              +998
+            </span>
+            <input
+              type="tel"
+              id="phone-number"
+              v-model="data.phone"
+              placeholder="(99) 999-99-99"
+              required
+              minlength="14"
+              maxlength="14"
+              autocomplete="off"
+              @keypress="phoneNumberFormatter()"
+              class="flex-1 px-3 py-2 border border-gray-300 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
           </div>
-          <div class="col-12">
-            <h2>Ro‘yxatdan o‘tish</h2>
-            <p>Iltimos ro‘yxatdan o‘tish uchun ma’lumotlarni kiriting</p>
+        </div>
+
+        <!-- Password Input -->
+        <div>
+          <label
+            for="input_password"
+            class="block text-sm font-medium text-gray-900 mb-1"
+          >
+            Parol
+          </label>
+          <div class="relative">
+            <input
+              :type="type ? 'password' : 'text'"
+              id="input_password"
+              v-model="passwords.password1"
+              placeholder="Parol kiriting"
+              required
+              autocomplete="off"
+              class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <button
+              type="button"
+              @click="type = !type"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              <i class="fa-solid" :class="type ? 'fa-eye' : 'fa-eye-slash'" />
+            </button>
           </div>
-          <div class="col-12">
-            <label for="phone-number">Ism</label>
-            <div class="input-group">
-              <Input type="text" class="form-control" placeholder="Ismingizni kiriting" autofocus required
-                v-model="data.name" autocomplete="off" />
-            </div>
+        </div>
+
+        <!-- Confirm Password Input -->
+        <div>
+          <label
+            for="input_password2"
+            class="block text-sm font-medium text-gray-900 mb-1"
+          >
+            Parol takrorlash
+          </label>
+          <div class="relative">
+            <input
+              :type="type2 ? 'password' : 'text'"
+              id="input_password2"
+              v-model="passwords.password2"
+              placeholder="Parolni takror kiriting"
+              required
+              autocomplete="off"
+              class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <button
+              type="button"
+              @click="type2 = !type2"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              <i class="fa-solid" :class="type2 ? 'fa-eye' : 'fa-eye-slash'" />
+            </button>
           </div>
-          <div class="col-12">
-            <label for="phone-number">Telefon raqam</label>
-            <div class="input-group">
-              <div class="input-group-text bg-transparent">+998</div>
-              <Input type="tel" class="form-control" placeholder="" autofocus required v-model="data.phone"
-                id="phone-number" minlength="14" maxlength="14" autocomplete="off" @keypress="phoneNumberFormatter()" />
-            </div>
-          </div>
-          <div class="col-12">
-            <label for="input_password">Parol</label>
-            <div class="input-group">
-              <Input :type="type ? 'password' : 'text'" class="form-control" placeholder="Parol kiriting" autofocus
-                required id="input_password" v-model="passwords.password1" autocomplete="off" />
-              <div class="input-group-text">
-                <i @click="type = !type" class="fa-solid text-secondary cursor"
-                  :class="type ? 'fa-eye' : 'fa-eye-slash'" />
-              </div>
-            </div>
-          </div>
-          <div class="col-12">
-            <label for="input_password">Parol takrorlash</label>
-            <div class="input-group">
-              <Input :type="type2 ? 'password' : 'text'" class="form-control" placeholder="Parolni takror kiriting"
-                autofocus required id="input_password" v-model="passwords.password2" autocomplete="off" />
-              <div class="input-group-text">
-                <i @click="type2 = !type2" class="fa-solid text-secondary cursor"
-                  :class="type2 ? 'fa-eye' : 'fa-eye-slash'" />
-              </div>
-            </div>
-          </div>
-          <div class="col-12 pt-3">
-            <button class="btn_submit">Ro‘yxatdan o‘tish</button>
-          </div>
-          <div>
-            <p>
-              Hisobingiz mavjudmi ?
-              <router-link to="/sign-in"> Kirish </router-link>
-            </p>
-          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="pt-4">
+          <button
+            type="submit"
+            class="w-full py-2.5 text-white font-medium bg-gradient-to-r from-orange-500 to-red-500 rounded-lg hover:from-orange-600 hover:to-red-600 transition-all duration-200 shadow-md hover:shadow-lg"
+          >
+            Ro'yxatdan o'tish
+          </button>
+        </div>
+
+        <!-- Sign In Link -->
+        <div class="text-center pt-2">
+          <p class="text-sm text-gray-600">
+            Hisobingiz mavjudmi?
+            <router-link
+              to="/sign-in"
+              class="text-blue-600 hover:text-blue-700 font-semibold"
+            >
+              Kirish
+            </router-link>
+          </p>
         </div>
       </form>
     </div>
   </main>
-  <div v-if="sms_tab">
-    <div class="d-flex align-items-center justify-content-center" style="height: 100vh">
-      <div class="text-center border border-2 p-3 bg-transparent" style="border-radius: 10px">
-        <h4 class="h5_title">+998 {{ data.phone }}</h4>
-        <p class="">
-          Telefon raqamiga yuborilgan
-          <span class="d-inline-block" style="font-size: 18px; font-weight: 800">SMS kod</span>ni kiriting
-        </p>
-        <form class="form" @submit.prevent="smsPost()">
-          <div class="d-flex justify-content-center gap-1 my-3">
-            <Input v-for="(char, index) in otpValue" :key="index" type="text" class="form-control otp-input text-center"
-              v-model="otpValue[index]" @input="moveToNextInput(index)" @keydown.backspace="moveToPreviousInput(index)"
-              maxlength="1" minlength="1" ref="inputs" required />
-          </div>
-          <button class="btn btn-sm form_submit">Keyingi</button>
-        </form>
-        <p class="pt-3" v-if="!rety_sms">{{ displayTime }}</p>
-        <p class="pt-3" v-else>
-          Kod kelmadimi ?
-          <span @click="retry_sms()" style="color: blue; cursor: pointer; font-size: 15px"
-            class="cursor-pointer d-inline-block">Qayta kod jo‘natish</span>
-        </p>
-      </div>
+  <!-- OTP Modal -->
+  <div
+    v-if="sms_tab"
+    class="flex items-center justify-center min-h-screen bg-gray-50"
+  >
+    <div
+      class="w-full max-w-md p-8 bg-white rounded-2xl shadow-lg border-2 border-gray-200 text-center"
+    >
+      <h4 class="text-xl font-bold text-gray-900 mb-2">
+        +998 {{ data.phone }}
+      </h4>
+      <p class="text-gray-600 mb-6">
+        Telefon raqamiga yuborilgan
+        <span class="font-bold text-lg">SMS kod</span>ni kiriting
+      </p>
+
+      <form @submit.prevent="smsPost()">
+        <div class="flex justify-center gap-2 mb-6">
+          <Input
+            v-for="(char, index) in otpValue"
+            :key="index"
+            type="text"
+            v-model="otpValue[index]"
+            @input="moveToNextInput(index)"
+            @keydown.backspace="moveToPreviousInput(index)"
+            maxlength="1"
+            minlength="1"
+            ref="otpInput"
+            required
+            class="w-12 h-12 text-center text-xl font-bold border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <button
+          type="submit"
+          class="w-full py-2.5 text-white font-medium bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg"
+        >
+          Keyingi
+        </button>
+      </form>
+
+      <p v-if="!rety_sms" class="mt-6 text-gray-700 font-semibold">
+        {{ displayTime }}
+      </p>
+      <p v-else class="mt-6 text-gray-600">
+        Kod kelmadimi?
+        <span
+          @click="retrySms()"
+          class="text-blue-600 hover:text-blue-700 font-semibold cursor-pointer"
+        >
+          Qayta kod jo'natish
+        </span>
+      </p>
     </div>
   </div>
 </template>
 
-<style scoped lang="scss">
+<style scoped>
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap");
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-label,
-input,
-p,
-button {
+* {
   font-family: "Inter", sans-serif;
-}
-
-p {
-  font-size: 16px;
-  color: var(--p-black);
-  font-weight: 600;
-}
-
-.form_submit {
-  font-size: 18px;
-  color: var(--white);
-}
-
-.btn_submit {
-  color: var(--white);
-}
-
-.otp-input {
-  width: 3rem;
-  text-align: center;
-}
-
-main {
-  display: flex;
-  place-content: center;
-  place-items: center;
-  background-size: cover;
-  background-position: right;
-  position: relative;
-}
-
-.sign-in-card {
-  padding: 3rem;
-  width: 450px;
-  height: max-content;
-  color: var(--p-white);
-  background-color: rgb(255, 255, 255, 0.2);
-  backdrop-filter: blur(3px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 15px;
-  text-align: center;
-  background: var(--p-white);
-}
-
-.sign-in-card img {
-  width: 150px;
-  margin-bottom: 40px;
-}
-
-h2 {
-  font-weight: 700;
-  letter-spacing: 1px;
-  color: var(--p-black);
-}
-
-.input-group {
-  width: 100%;
-  margin: auto;
-}
-
-label {
-  color: var(--p-black);
-  text-align: start;
-  width: 100%;
-  margin-bottom: 3px;
-}
-
-.icon {
-  width: 20px !important;
-  height: 20px !important;
-}
-
-button {
-  padding: 0.7rem 1.4rem;
-  color: var(--p-white);
-  background-color: var(--orangred);
-  font-size: small;
-  letter-spacing: 2px;
-  width: 100%;
-}
-
-button:active {
-  border-color: var(--p-white);
-}
-
-a {
-  font-size: 14px;
-}
-
-@media (max-width: 500px) {
-  .sign-in-card {
-    padding: 30px 0 0 0;
-
-    img {
-      margin-bottom: 10px;
-    }
-  }
-
-  h2 {
-    font-size: 18px;
-  }
-
-  p {
-    font-size: 14px;
-  }
-}
-
-@media (max-width: 425px) {
-  .sign-in-card {
-    width: 95%;
-  }
 }
 
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 </style>

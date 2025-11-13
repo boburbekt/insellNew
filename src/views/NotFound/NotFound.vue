@@ -4,6 +4,7 @@
 <template>
   <main>
     <strong>404 Not found !</strong>
+    <Input />
   </main>
 </template>
 

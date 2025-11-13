@@ -14,7 +14,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
-      '@types': path.resolve(__dirname, './@types')
+      '@types': fileURLToPath(new URL('./@types/modules/index', import.meta.url))
     },
   },
 })
